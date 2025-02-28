@@ -13,7 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Buildx with the correct driver
+      # Debug - Check if Dockerfile exists
+      - name: Debug - Check Dockerfile
+        run: |
+          echo "Checking for Dockerfile..."
+          ls -la
+          find . -name "Dockerfile" || echo "Dockerfile NOT FOUND!"
+
+      # Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
@@ -29,7 +36,7 @@ jobs:
       - name: Build and push Docker image (commit SHA tag)
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: .  # Change this if Dockerfile is in a subfolder
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-docker:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
@@ -38,7 +45,7 @@ jobs:
       - name: Build and push Docker image (latest tag)
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: .  # Change this if Dockerfile is in a subfolder
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
