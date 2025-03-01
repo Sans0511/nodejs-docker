@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Build, Push, and Deploy to Railway
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       # Debug - Check if Dockerfile exists
@@ -36,7 +36,7 @@ jobs:
       - name: Build and push Docker image (commit SHA tag)
         uses: docker/build-push-action@v3
         with:
-          context: .  # Change this if Dockerfile is in a subfolder
+          context: .  
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-docker:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
@@ -45,7 +45,23 @@ jobs:
       - name: Build and push Docker image (latest tag)
         uses: docker/build-push-action@v3
         with:
-          context: .  # Change this if Dockerfile is in a subfolder
+          context: .  
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/nodejs-docker:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Install Railway CLI
+        run: curl -fsSL https://railway.app/install.sh | sh
+
+      - name: Authenticate Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway login --token $RAILWAY_TOKEN
+
+      - name: Deploy to Railway
+        run: railway up
