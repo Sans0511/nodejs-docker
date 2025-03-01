@@ -46,13 +46,23 @@ jobs:
           fi
 
       - name: Authenticate Railway CLI
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          echo "Exported RAILWAY_TOKEN"
-          railway status # This implicitly authenticates
+          railway status
+          if [ $? -eq 0 ]; then
+            echo "Railway CLI authentication successful (status)"
+          else
+            echo "Railway CLI authentication failed (status)"
+            exit 1 # Stop if authentication fails
+          fi
+          railway whoami
+          if [ $? -eq 0 ]; then
+            echo "Railway CLI authentication successful (whoami)"
+          else
+            echo "Railway CLI authentication failed (whoami)"
+            exit 1 # Stop if authentication fails
+          fi
 
-      - name: Debug Railway Status
-        run: railway status
-
-      - name: Deploy to Railway
-        run: railway up --service node-api
+    - name: Deploy to Railway
+      run: railway up --service node-api
