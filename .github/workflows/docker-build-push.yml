@@ -65,4 +65,4 @@ jobs:
           fi
 
       - name: Deploy to Railway
-        run: railway up --service node-api
+        run: railway up --service nodejs-docker
