@@ -35,12 +35,12 @@ jobs:
 
     steps:
       - name: Install Railway CLI
-        run: curl -fsSL https://railway.app/install.sh | sh
+        run: curl -fsSSL https://railway.app/install.sh | sh
 
-      - name: Login to Railway
+      - name: Authenticate Railway CLI
         run: |
           export RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          railway login
+          railway projects # This implicitly authenticates
 
       - name: Deploy to Railway
         run: railway up --service node-api
