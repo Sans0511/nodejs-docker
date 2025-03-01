@@ -35,7 +35,7 @@ jobs:
 
     steps:
       - name: Install Railway CLI (Update)
-        run: curl -fsSL https://railway.app/install.sh | sh
+        run: curl -fsSSL https://railway.app/install.sh | sh
 
       - name: Debug RAILWAY_TOKEN
         run: |
@@ -64,5 +64,5 @@ jobs:
             exit 1 # Stop if authentication fails
           fi
 
-    - name: Deploy to Railway
-      run: railway up --service node-api
+      - name: Deploy to Railway
+        run: railway up --service node-api
