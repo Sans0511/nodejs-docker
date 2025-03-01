@@ -38,7 +38,12 @@ jobs:
         run: curl -fsSL https://railway.app/install.sh | sh
 
       - name: Debug RAILWAY_TOKEN
-        run: echo "RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}"
+        run: |
+          if [[ -n "${{ secrets.RAILWAY_TOKEN }}" ]]; then
+            echo "RAILWAY_TOKEN is set"
+          else
+            echo "RAILWAY_TOKEN is NOT set"
+          fi
 
       - name: Authenticate Railway CLI
         run: |
