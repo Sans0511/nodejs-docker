@@ -3,7 +3,7 @@ name: Build, Push, and Deploy to Railway
 on:
   push:
     branches:
-      - main  # Deploy when pushing to main branc
+      - main  # Deploy when pushing to main branch
 
 jobs:
   build:
@@ -58,16 +58,25 @@ jobs:
           echo "🔄 Authenticating with Railway..."
           echo "${RAILWAY_TOKEN}" > ~/.railway_token
 
+          railway logout || true
+          railway login --token $RAILWAY_TOKEN
+          
           railway status || { echo "❌ Authentication failed!"; exit 1; }
           railway whoami || { echo "❌ Authentication (whoami) failed!"; exit 1; }
+
+      - name: Ensure Railway Project is Linked
+        run: |
+          PROJECT_NAME="airy-energy"
+          railway link || railway init --name "$PROJECT_NAME"
 
       - name: Get Railway Service Name
         id: get_service
         run: |
           SERVICE_NAME=$(railway status | grep "Service:" | awk '{print $2}')
-          if [[ -z "$SERVICE_NAME" ]]; then
-            echo "❌ Could not detect Railway service. Check if it's created."
-            exit 1
+          if [[ -z "$SERVICE_NAME" || "$SERVICE_NAME" == "None" ]]; then
+            echo "❌ Could not detect Railway service. Creating service..."
+            railway add service nodejs-docker
+            SERVICE_NAME="nodejs-docker"
           fi
           echo "✅ Detected Railway Service: $SERVICE_NAME"
           echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_ENV
