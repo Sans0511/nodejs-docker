@@ -3,7 +3,7 @@ name: Build, Push, and Deploy to Railway
 on:
   push:
     branches:
-      - main  # Deploy when pushing to main branc
+      - main  # Deploy when pushing to main branch
 
 jobs:
   build:
@@ -34,35 +34,43 @@ jobs:
     needs: build
 
     steps:
-      - name: Install Railway CLI (Update)
-        run: curl -fsSSL https://railway.app/install.sh | sh
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
 
       - name: Debug RAILWAY_TOKEN
         run: |
           if [[ -n "${{ secrets.RAILWAY_TOKEN }}" ]]; then
-            echo "RAILWAY_TOKEN is set"
+            echo "✅ RAILWAY_TOKEN is set"
           else
-            echo "RAILWAY_TOKEN is NOT set"
+            echo "❌ RAILWAY_TOKEN is NOT set! Check your GitHub Secrets."
+            exit 1
           fi
 
       - name: Authenticate Railway CLI
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway status
-          if [ $? -eq 0 ]; then
-            echo "Railway CLI authentication successful (status)"
-          else
-            echo "Railway CLI authentication failed (status)"
-            exit 1 # Stop if authentication fails
+          echo "🔄 Authenticating with Railway..."
+          echo "${RAILWAY_TOKEN}" > ~/.railway_token
+
+          railway status || { echo "❌ Authentication failed!"; exit 1; }
+          railway whoami || { echo "❌ Authentication (whoami) failed!"; exit 1; }
+
+      - name: Get Railway Service Name
+        id: get_service
+        run: |
+          SERVICE_NAME=$(railway status | grep "Service:" | awk '{print $2}')
+          if [[ -z "$SERVICE_NAME" ]]; then
+            echo "❌ Could not detect Railway service. Check if it's created."
+            exit 1
           fi
-          railway whoami
-          if [ $? -eq 0 ]; then
-            echo "Railway CLI authentication successful (whoami)"
-          else
-            echo "Railway CLI authentication failed (whoami)"
-            exit 1 # Stop if authentication fails
-          fi
+          echo "✅ Detected Railway Service: $SERVICE_NAME"
+          echo "SERVICE_NAME=$SERVICE_NAME" >> $GITHUB_ENV
 
       - name: Deploy to Railway
-        run: railway up --service nodejs-docker
+        run: railway up --service ${{ env.SERVICE_NAME }}
