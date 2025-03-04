@@ -3,7 +3,7 @@ name: Build, Push, and Deploy to Railway
 on:
   push:
     branches:
-      - main  # Deploy when pushing to main branch
+      - main  # Deploy when pushing to main branc
 
 jobs:
   build:
